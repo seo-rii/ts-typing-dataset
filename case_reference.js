@@ -9,6 +9,9 @@ const notTarget = [
     'false',
     'Infinity',
     '-Infinity',
+    '""',
+    "''",
+    '``',
 ]
 
 async function processFiles() {
@@ -82,6 +85,7 @@ function parseFiles(jsContent, typesContent) {
             if(type.length > 20) return false;
             if(notTarget.includes(type)) return false;
             if(code === type) return false;
+            if(code.includes('=')) return false;
             return true;
         })
     };
