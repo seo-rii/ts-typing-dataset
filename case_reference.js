@@ -17,11 +17,13 @@ const notTarget = [
 async function processFiles() {
     const referenceDir = './reference'; // reference 디렉토리 경로
     try {
+        await fs.unlink('raw.jsonl');
         await fs.unlink('output.jsonl');
     } catch(e) {}
     
     // 디렉토리의 모든 파일 읽기
     const files = await fs.readdir(referenceDir);
+    const list = [];
         
     // .js 파일만 필터링
     const jsFiles = files.filter(file => file.endsWith('.js'));
@@ -40,9 +42,19 @@ async function processFiles() {
             if (!result.types.length) continue;
             
             // 또는 파일로 저장
-            await fs.appendFile(`output.jsonl`, JSON.stringify(result) + '\n');
+            await fs.appendFile(`raw.jsonl`, JSON.stringify(result) + '\n');
+            list.push(result);
         } catch (error) {
             console.error('Error processing files:', error);
+        }
+    }
+    for(const item of list) {
+        for(const type of item.types) {
+            await fs.appendFile(`output.jsonl`, JSON.stringify({
+                code: item.code,
+                query: type.code,
+                result: type.type,
+            }) + '\n');
         }
     }
 }
