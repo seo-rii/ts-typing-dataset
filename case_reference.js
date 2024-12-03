@@ -89,15 +89,30 @@ function parseFiles(jsContent, typesContent) {
     if (currentCode && currentType) {
         typeEntries.push({ code: currentCode.trim(), type: currentType.trim() });
     }
+
+    if(typeEntries.some(({type})=>type==='error')) {
+        return {
+            code: tsCode,
+            types: []
+        };
+    }
     
     return {
         code: tsCode,
         types: typeEntries.filter(({code, type}) => {
             if(!code || !type) return false;
+            if(code.length > 20) return false;
             if(type.length > 20) return false;
             if(notTarget.includes(type)) return false;
             if(code === type) return false;
             if(code.includes('=')) return false;
+            if(type.includes('typeof')) return false;
+            if(type.includes('import')) return false;
+            if(type.includes('unknown')) return false;
+            if(type.includes('unique symbol')) return false;
+            if(code.includes('"')) return false;
+            if(code.includes('`')) return false;
+            if(code.includes('\'')) return false;
             return true;
         })
     };
