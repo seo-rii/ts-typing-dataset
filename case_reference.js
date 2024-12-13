@@ -36,6 +36,9 @@ async function processFiles() {
             // .js와 .types 파일 내용 읽기
             const jsContent = await fs.readFile(path.join(referenceDir, jsFile), 'utf8');
             const typesContent = await fs.readFile(path.join(referenceDir, typesFile), 'utf8');
+            if(jsContent.includes('<reference')) continue;
+            if(jsContent.includes('import')) continue;
+            if(!jsContent) continue;
             
             // 파일 내용 파싱
             const result = parseFiles(jsContent, typesContent);
@@ -48,8 +51,11 @@ async function processFiles() {
             console.error('Error processing files:', error);
         }
     }
+    let lc = 0
     for(const item of list) {
         for(const type of item.types) {
+            lc += type.type.length;
+            continue;
             await fs.appendFile(`output.jsonl`, JSON.stringify({
                 code: item.code,
                 query: type.code,
@@ -57,6 +63,8 @@ async function processFiles() {
             }) + '\n');
         }
     }
+
+    console.log(lc);
 }
 
 function parseFiles(jsContent, typesContent) {
