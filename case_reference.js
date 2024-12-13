@@ -55,7 +55,6 @@ async function processFiles() {
     for(const item of list) {
         for(const type of item.types) {
             lc += type.type.length;
-            continue;
             await fs.appendFile(`output.jsonl`, JSON.stringify({
                 code: item.code,
                 query: type.code,
@@ -104,25 +103,38 @@ function parseFiles(jsContent, typesContent) {
             types: []
         };
     }
+
+    const typeRaw =  typeEntries.filter(({code, type}) => {
+        if(!code || !type) return false;
+        if(code.length > 20) return false;
+        if(type.length > 20) return false;
+        if(notTarget.includes(type)) return false;
+        if(code === type) return false;
+        if(code.includes('=')) return false;
+        if(type.includes('typeof')) return false;
+        if(type.includes('import')) return false;
+        if(type.includes('unknown')) return false;
+        if(type.includes('unique symbol')) return false;
+        if(code.includes('"')) return false;
+        if(code.includes('`')) return false;
+        if(code.includes('\'')) return false;
+        return true;
+    });
+
+    // remove duplicate code
+
+    const typeEntriesMap = typeRaw.reduce((acc, {code, type}) => {
+        if(!acc[code]) {
+            acc[code] = type;
+        }
+        return acc;
+    }, {});
+
+    const typeEntriesFiltered = Object.entries(typeEntriesMap).map(([code, type]) => ({code, type}));
     
     return {
         code: tsCode,
-        types: typeEntries.filter(({code, type}) => {
-            if(!code || !type) return false;
-            if(code.length > 20) return false;
-            if(type.length > 20) return false;
-            if(notTarget.includes(type)) return false;
-            if(code === type) return false;
-            if(code.includes('=')) return false;
-            if(type.includes('typeof')) return false;
-            if(type.includes('import')) return false;
-            if(type.includes('unknown')) return false;
-            if(type.includes('unique symbol')) return false;
-            if(code.includes('"')) return false;
-            if(code.includes('`')) return false;
-            if(code.includes('\'')) return false;
-            return true;
-        })
+        types: typeEntriesFiltered
     };
 }
 
